@@ -8,7 +8,7 @@ import Grid from '@material-ui/core/Grid';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import Badge from '@material-ui/core/Badge';
 import { Item } from './Item/Item';
-
+import {Cart} from './Cart/Cart';
 //styles
 import { Wrapper,StyledButton } from './App.styles';
 import { cartItemType } from './types';
@@ -23,15 +23,39 @@ const App = () => {
 	console.log('--data--', isLoading, data);
 
 	const getTotalItems = (items: cartItemType[]) => items.reduce((acc:number,_eachItem)=>acc+_eachItem.amount,0);
-	const handleAddToCart = (item: cartItemType) => null;
-	const handleRemoveFromCart = () => null;
+	const handleAddToCart = (item: cartItemType) => {
+		setCartItems((prevItem)=> {
+				//is Item already exist in the cart
+			const isItemInCart = prevItem.find((_eachItem) => _eachItem.id === item.id) 
+			if (isItemInCart) {
+				return prevItem.map((_item) => _item.id === item.id ? {..._item,amount:_item.amount+1}:_item)
+			}
+			//first time item is added
+			return [...prevItem,{...item,amount:1}]
+		})
+	};
+	const handleRemoveFromCart = (id: number) => {
+		setCartItems((prevItem)=> {
+			return prevItem.reduce((acc,_item)=>{
+				if (_item.id===id) {
+					if (_item.amount===1) return acc;
+					return [...acc,{..._item,amount:_item.amount-1}]
+				}
+				else {
+					return [...acc, _item]
+				}
+			},[] as cartItemType[])
+
+		})
+	};
 
 	if (isLoading) return <LinearProgress />;
 	if (error) return <div> someting wrong here </div>;
 	return (
 		<Wrapper>
 			<Drawer anchor="right" open={cartOpen} onClose={()=> setCartOpen(false)}>
-			cart goes here
+			
+			<Cart cartItems={cartItems} addToCart={handleAddToCart} removeFromCart={handleRemoveFromCart} />
 			</Drawer>
 			<StyledButton onClick={() => setCartOpen(true)}>
 				<Badge badgeContent={getTotalItems(cartItems)} color="error"> 
